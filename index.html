@@ -1,5 +1,25 @@
-<html>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <canvas id="myChart"></canvas>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Google Sheets → Chart.js Visualization</title>
 
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <h1>Araman By Numbers</h1>
+
+  <p>Live data pulled from Google Sheets and visualized using Chart.js.</p>
+
+  <div class="chart-container">
+    <canvas id="mainChart"></canvas>
+  </div>
+
+  <script src="script.js"></script>
+</body>
 </html>
