@@ -1,0 +1,12 @@
+async function fetchSheetData() {
+    const sheetId = "YOUR_SHEET_ID";
+    const apiKey = "YOUR_API_KEY";
+    const range = "Sheet1!A:C"; // adjust as needed
+  
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+  
+    const response = await fetch(url);
+    const data = await response.json();
+  
+    return data.values;   /* [["Date","Rating","Category"],["2025-01-01","5","A"],...] */
+  }  
