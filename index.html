@@ -16,8 +16,25 @@
 
   <p>Live data pulled from Google Sheets and visualized using Chart.js.</p>
 
-  <div class="chart-container">
-    <canvas id="mainChart"></canvas>
+  <!-- Episode Selector -->
+  <div class="episode-selector">
+    <label for="episodeFilter">Select Episode:</label>
+    <select id="episodeFilter">
+      <option value="all">All Episodes</option>
+      <!-- Dynamically populated -->
+    </select>
+  </div>
+
+  <!-- Chart Containers -->
+  <div class="charts-grid">
+    <div class="chart-container">
+      <h3 id="chart1-title">Chart Loading...</h3>
+      <canvas id="chart1"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3 id="chart2-title">Chart Loading...</h3>
+      <canvas id="chart2"></canvas>
+    </div>
   </div>
 
   <script src="script.js"></script>
