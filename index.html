@@ -1,59 +1,25 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dice Roll Analytics</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Araman In Numbers</title>
 
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="styles.css">
 
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
-  <main>
-    <h1>Dice Roll Analytics</h1>
+  <h1>Araman In Numbers</h1>
 
-    <section class="controls">
-      <label for="episodeSelector">Episode:</label>
-      <select id="episodeSelector">
-        <option value="all">All Episodes</option>
-      </select>
+  <p>Live data pulled from Google Sheets and visualized using Chart.js.</p>
 
-      <label for="chartSelect">Chart:</label>
-      <select id="chartSelect">
-        <option value="avgByPlayer">Average Roll by Player</option>
-        <option value="successByType">Success Rate by Roll Type</option>
-        <option value="distribution">Roll Result Distribution</option>
-      </select>
-    </section>
+  <div class="chart-container">
+    <canvas id="mainChart"></canvas>
+  </div>
 
-    <section class="charts">
-      <canvas id="mainChart"></canvas>
-    </section>
-
-    <footer>
-      <p>Data source: Google Sheet — <code>1LjfMcOchvEHakLe-UFtz2rM6hR-UtcRpK3iNWmOxkrg</code></p>
-    </footer>
-  </main>
-
-  <script type="module">
-    import { fetchSheetData } from './js/googleSheets.js';
-    import { initDB } from './js/db.js';
-    import { setupUI } from './js/ui.js';
-
-    async function boot() {
-      try {
-        const rows = await fetchSheetData();
-        await initDB(rows);
-        setupUI();
-      } catch (err) {
-        console.error('Boot error:', err);
-        document.body.insertAdjacentHTML('beforeend', `<p class="error">${err.message}</p>`);
-      }
-    }
-
-    boot();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
