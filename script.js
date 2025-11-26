@@ -139,6 +139,21 @@ function countRollsByPlayer(records) {
   return { labels, values };
 }
 
+// Count Rolls by Stat Type
+function countRollsByStat(records) {
+  const stats = {};
+
+  for (const r of records) {
+    if (!r.stat) continue; // Skip records without stat
+    stats[r.stat] = (stats[r.stat] || 0) + 1;
+  }
+
+  const labels = Object.keys(stats);
+  const values = labels.map(s => stats[s]);
+
+  return { labels, values };
+}
+
 // ==========================
 // Chart Configuration
 // ==========================
@@ -243,6 +258,56 @@ const chartConfigs = [
               const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
               return `${label}: ${value} (${percentage}%)`;
             }
+          }
+        }
+      }
+    }
+  },
+  {
+    id: 'chart4',
+    canvasId: 'chart4',
+    titleId: 'chart4-title',
+    title: 'Rolls by Stat Type',
+    transformFn: countRollsByStat,
+    chartType: 'polarArea',
+    backgroundColor: [
+      'rgba(255, 99, 132, 0.8)',   // Red
+      'rgba(54, 162, 235, 0.8)',   // Blue
+      'rgba(255, 206, 86, 0.8)',   // Yellow
+      'rgba(75, 192, 192, 0.8)',   // Teal
+      'rgba(153, 102, 255, 0.8)',  // Purple
+      'rgba(255, 159, 64, 0.8)',   // Orange
+      'rgba(199, 199, 199, 0.8)',  // Grey
+      'rgba(83, 102, 255, 0.8)',   // Indigo
+    ],
+    borderColor: '#fff',
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'right'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              // For polar area charts, parsed is an object with 'r' property
+              const value = context.parsed?.r ?? context.raw ?? 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      },
+      scales: {
+        r: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            precision: 0
           }
         }
       }
