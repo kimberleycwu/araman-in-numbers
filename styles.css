@@ -67,7 +67,7 @@ p {
   height: 500px;
   display: flex;
   flex-direction: column;
-  padding-bottom: 40px;
+  padding-bottom: 10%;
 }
 
 .chart-container h3 {

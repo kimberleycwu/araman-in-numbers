@@ -101,26 +101,40 @@ function groupAverageByPlayer(records) {
   return { labels, values };
 }
 
-// Success Rate by Character
+// Success and Failure Counts by Character (for grouped bar chart)
 function groupSuccessRateByCharacter(records) {
   const characters = {};
 
   for (const r of records) {
     if (!r.character) continue; // Skip records without character
     if (!characters[r.character]) {
-      characters[r.character] = { successes: 0, total: 0 };
+      characters[r.character] = { successes: 0, failures: 0 };
     }
-    characters[r.character].total += 1;
     if (r.success) {
       characters[r.character].successes += 1;
+    } else {
+      characters[r.character].failures += 1;
     }
   }
 
   const labels = Object.keys(characters);
-  const values = labels.map(c => {
-    const char = characters[c];
-    return char.total > 0 ? (char.successes / char.total) * 100 : 0;
-  });
+  const successValues = labels.map(c => characters[c].successes);
+  const failureValues = labels.map(c => characters[c].failures);
+
+  return { labels, successValues, failureValues };
+}
+
+// Count Rolls by Player
+function countRollsByPlayer(records) {
+  const players = {};
+
+  for (const r of records) {
+    if (!r.player) continue; // Skip records without player
+    players[r.player] = (players[r.player] || 0) + 1;
+  }
+
+  const labels = Object.keys(players);
+  const values = labels.map(p => players[p]);
 
   return { labels, values };
 }
@@ -161,27 +175,75 @@ const chartConfigs = [
     id: 'chart2',
     canvasId: 'chart2',
     titleId: 'chart2-title',
-    title: 'Success Rate by Character',
+    title: 'Successes and Failures by Character',
     transformFn: groupSuccessRateByCharacter,
     chartType: 'bar',
-    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-    borderColor: 'rgba(75, 192, 192, 1)',
+    isGrouped: true, // Flag to indicate this is a grouped bar chart
+    successColor: 'rgba(75, 192, 192, 0.8)',   // Teal for successes
+    failureColor: 'rgba(255, 99, 132, 0.8)',  // Red for failures
+    successBorderColor: 'rgba(75, 192, 192, 1)',
+    failureBorderColor: 'rgba(255, 99, 132, 1)',
     options: {
+      indexAxis: 'y', // Horizontal bar chart
       responsive: true,
       maintainAspectRatio: false,
       scales: { 
-        y: { 
+        x: { 
           beginAtZero: true,
-          max: 100,
+          ticks: {
+            stepSize: 1,
+            precision: 0
+          },
           title: {
             display: true,
-            text: 'Success Rate (%)'
+            text: 'Number of Rolls'
           }
         }
       },
       plugins: {
         legend: {
-          display: false
+          display: true,
+          position: 'top'
+        }
+      }
+    }
+  },
+  {
+    id: 'chart3',
+    canvasId: 'chart3',
+    titleId: 'chart3-title',
+    title: 'Total Rolls by Player',
+    transformFn: countRollsByPlayer,
+    chartType: 'doughnut',
+    backgroundColor: [
+      'rgba(255, 99, 132, 0.8)',   // Red
+      'rgba(54, 162, 235, 0.8)',   // Blue
+      'rgba(255, 206, 86, 0.8)',   // Yellow
+      'rgba(75, 192, 192, 0.8)',   // Teal
+      'rgba(153, 102, 255, 0.8)',  // Purple
+      'rgba(255, 159, 64, 0.8)',   // Orange
+      'rgba(199, 199, 199, 0.8)',  // Grey
+      'rgba(83, 102, 255, 0.8)',   // Indigo
+    ],
+    borderColor: '#fff',
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'right'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
         }
       }
     }
@@ -229,32 +291,88 @@ function renderChart(config, filteredRecords, episodeNumber) {
   // Calculate chart data
   const chartData = config.transformFn(filteredRecords);
   
-  // Check if chart already exists
-  if (chartInstances[config.id]) {
-    // Update existing chart (efficient)
-    const chart = chartInstances[config.id];
-    chart.data.labels = chartData.labels;
-    chart.data.datasets[0].data = chartData.values;
-    chart.data.datasets[0].label = config.title;
-    chart.data.datasets[0].backgroundColor = config.backgroundColor;
-    chart.data.datasets[0].borderColor = config.borderColor;
-    chart.update();
+  // Check if this is a grouped bar chart
+  if (config.isGrouped) {
+    // Handle grouped bar chart (e.g., successes and failures)
+    if (chartInstances[config.id]) {
+      // Update existing chart
+      const chart = chartInstances[config.id];
+      chart.data.labels = chartData.labels;
+      chart.data.datasets[0].data = chartData.successValues;
+      chart.data.datasets[1].data = chartData.failureValues;
+      chart.update();
+    } else {
+      // Create new grouped chart
+      chartInstances[config.id] = new Chart(canvas, {
+        type: config.chartType,
+        data: {
+          labels: chartData.labels,
+          datasets: [
+            {
+              label: 'Successes',
+              data: chartData.successValues,
+              borderWidth: 2,
+              backgroundColor: config.successColor,
+              borderColor: config.successBorderColor
+            },
+            {
+              label: 'Failures',
+              data: chartData.failureValues,
+              borderWidth: 2,
+              backgroundColor: config.failureColor,
+              borderColor: config.failureBorderColor
+            }
+          ]
+        },
+        options: config.options
+      });
+    }
   } else {
-    // Create new chart
-    chartInstances[config.id] = new Chart(canvas, {
-      type: config.chartType,
-      data: {
-        labels: chartData.labels,
-        datasets: [{
-          label: config.title,
-          data: chartData.values,
-          borderWidth: 2,
-          backgroundColor: config.backgroundColor,
-          borderColor: config.borderColor
-        }]
-      },
-      options: config.options
-    });
+    // Handle single dataset charts (bar, pie, doughnut)
+    // Handle colors - pie charts need arrays, bar charts can use single values
+    const backgroundColor = Array.isArray(config.backgroundColor)
+      ? config.backgroundColor
+      : config.backgroundColor;
+    const borderColor = Array.isArray(config.borderColor)
+      ? config.borderColor
+      : config.borderColor;
+    
+    // For pie charts, ensure we have enough colors (cycle if needed)
+    let finalBackgroundColor = backgroundColor;
+    if (Array.isArray(backgroundColor) && chartData.labels.length > backgroundColor.length) {
+      // Cycle through colors if we have more players than colors
+      finalBackgroundColor = chartData.labels.map((_, i) => 
+        backgroundColor[i % backgroundColor.length]
+      );
+    }
+    
+    // Check if chart already exists
+    if (chartInstances[config.id]) {
+      // Update existing chart (efficient)
+      const chart = chartInstances[config.id];
+      chart.data.labels = chartData.labels;
+      chart.data.datasets[0].data = chartData.values;
+      chart.data.datasets[0].label = config.title;
+      chart.data.datasets[0].backgroundColor = finalBackgroundColor;
+      chart.data.datasets[0].borderColor = borderColor;
+      chart.update();
+    } else {
+      // Create new chart
+      chartInstances[config.id] = new Chart(canvas, {
+        type: config.chartType,
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: config.title,
+            data: chartData.values,
+            borderWidth: 2,
+            backgroundColor: finalBackgroundColor,
+            borderColor: borderColor
+          }]
+        },
+        options: config.options
+      });
+    }
   }
 }
 
